@@ -8,7 +8,7 @@ build_script:
   - git clone https://github.com/xmrig/xmrig-deps.git
   - md build
   - cd build
-  - cmake -G "Visual Studio 15 2017 Win64" .. -DUV_INCLUDE_DIR =..\xmrig-deps\msvc2017\x64\include
+  - cmake -G "Visual Studio 15 2017 Win64" .. -DUV_INCLUDE_DIR=..\xmrig-deps\msvc2017\x64\include
   - MSBuild xmrig.sln /p:Configuration=Release /m
    
 after_build: 
