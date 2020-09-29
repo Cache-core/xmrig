@@ -1,33 +1,24 @@
+os: Visual Studio 2017
 
-# image
-image: Visual Studio 2017 
-
-# build platform
-platform: x64
-
-# clone directory
-clone_folder: c:\xmrig
-
-install:
-   - appveyor DownloadFile  https://www.python.org/ftp/python/2.7.15/python-2.7.15.amd64.msi -FileName python-2.7.15.amd64.msi
-   - msiexec /qn /i python-2.7.15.amd64.msi 
-   - set PYTHON=C:\Python27\python.exe
-   - git clone https://github.com/libuv/libuv c:\libuv
+environment:
+  BOOST_ROOT: C:\Libraries\boost_1_67_0
+  BOOST_LIBRARYDIR: C:\Libraries\boost_1_67_0\lib64-msvc-14
 
 build_script:
-  - cd c:\libuv
-  - call vcbuild.bat release vs2017 x64 static
-  - cd c:\xmrig
-  - mkdir build
+  - md build
   - cd build
-  - cmake .. -G "Visual Studio 15 2017 Win64" -DUV_INCLUDE_DIR="c:\libuv\include" -DUV_LIBRARY="c:\libuv\Release\lib\libuv.lib" 
-#-DMHD_INCLUDE_DIR="c:\xmrig\libmicrohttpd_msvc2017"  -DMHD_LIBRARY="c:\xmrig\libmicrohttpd_msvc2017\libmicrohttpd.lib"
-  - cmake --build . --config Release
+  - cmake -G "Visual Studio 15 2017 Win64" ..
+  - MSBuild xmrig.sln /p:Configuration=Release /m
+   
+after_build: 
+  - if not defined APPVEYOR_BUILD_NUMBER (set APPVEYOR_BUILD_NUMBER=%APPVEYOR_BUILD_ID%)
+  - cd src\Release
+  - mkdir xmrig-%APPVEYOR_BUILD_NUMBER%
+  - copy *.exe xmrig-%APPVEYOR_BUILD_NUMBER%
+  - copy ..\..\..\LICENSE xmrig-%APPVEYOR_BUILD_NUMBER%
+  - 7z a xmrig-%APPVEYOR_BUILD_NUMBER%-windows.zip xmrig-%APPVEYOR_BUILD_NUMBER%
+  - copy xmrig-%APPVEYOR_BUILD_NUMBER%-windows.zip ..\..\..\
   
-after_build:
-- ps: | # package artifacts
-    7z a -m0=LZMA2 -mx9 c:\xmrig\xmrig.7z c:\xmrig\build\Release\*
-
 artifacts:
-- path: xmrig.7z
-  name: xmrig
+  - path: xmrig-$(APPVEYOR_BUILD_NUMBER)-windows.zip
+    name: xmrig
