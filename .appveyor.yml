@@ -1,0 +1,33 @@
+
+# image
+image: Visual Studio 2017 
+
+# build platform
+platform: x64
+
+# clone directory
+clone_folder: c:\xmrig
+
+install:
+   - appveyor DownloadFile  https://www.python.org/ftp/python/2.7.15/python-2.7.15.amd64.msi -FileName python-2.7.15.amd64.msi
+   - msiexec /qn /i python-2.7.15.amd64.msi 
+   - set PYTHON=C:\Python27\python.exe
+   - git clone https://github.com/libuv/libuv c:\libuv
+
+build_script:
+  - cd c:\libuv
+  - call vcbuild.bat release vs2017 x64 static
+  - cd c:\xmrig
+  - mkdir build
+  - cd build
+  - cmake .. -G "Visual Studio 15 2017 Win64" -DUV_INCLUDE_DIR="c:\libuv\include" -DUV_LIBRARY="c:\libuv\Release\lib\libuv.lib" 
+#-DMHD_INCLUDE_DIR="c:\xmrig\libmicrohttpd_msvc2017"  -DMHD_LIBRARY="c:\xmrig\libmicrohttpd_msvc2017\libmicrohttpd.lib"
+  - cmake --build . --config Release
+  
+after_build:
+- ps: | # package artifacts
+    7z a -m0=LZMA2 -mx9 c:\xmrig\xmrig.7z c:\xmrig\build\Release\*
+
+artifacts:
+- path: xmrig.7z
+  name: xmrig
